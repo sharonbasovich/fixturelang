@@ -4,6 +4,8 @@ FixtureLang is an original project implementation developed with assistance from
 
 The language is implemented by a lexer, recursive-descent parser, semantic validator and interpreter. AI assistance was used during development; running FixtureLang does not call a remote model, AI API or other external service.
 
+For the 0.1.1 edge-case inspector, a bounded independent review used the requested exact service model ID `claude-opus-4.8` through the existing Kiro subscription bridge. The service accepted that ID; its underlying model weights were not independently attested. The review received sanitized source and returned suggestions; Codex checked the findings, made the changes and ran the tests. No Kiro bridge code or runtime dependency is included in this project.
+
 ## Existing techniques
 
 - The deterministic PRNG implements the established **Mulberry32** algorithm. FixtureLang does not claim that algorithm as a new invention; its exact use and draw order are documented in the [language reference](language-reference.md).

@@ -9,6 +9,7 @@ import { createStaticServer, PROJECT_ROOT } from './server.mjs';
 import { EXAMPLES } from '../src/examples.js';
 import { run } from '../src/language.js';
 import { toJSON, toCSV } from '../src/export.js';
+import { inspectTable } from '../src/inspect.js';
 
 const require = createRequire(import.meta.url);
 const playwright = require(process.env.FIXTURELANG_PLAYWRIGHT || 'playwright-core');
@@ -208,6 +209,125 @@ try {
       const response = await context.request.get(origin + route);
       assert.equal(response.status(), 200);
     }
+  });
+  const inspectButton = kind => page.locator(`[data-inspect="${kind}"]`);
+  const rowNumbers = () => page.locator('#result-panel tbody .row-index').allTextContents();
+  await check('Inspection counts actual cells, isolates records with original row numbers, and preserves full exports', async () => {
+    await page.getByRole('tab', { name: 'Table', exact: true }).click();
+    for (const [kind, count] of Object.entries({ all: 12, duplicate: 3, missing: 3, null: 4 })) {
+      assert.equal(await inspectButton(kind).locator('[data-count]').textContent(), String(count));
+    }
+    await inspectButton('missing').click();
+    assert.deepEqual(await rowNumbers(), ['4', '8', '12']);
+    assert.equal(await page.locator('.inspected-cell').count(), 3);
+    assert.equal(await inspectButton('missing').getAttribute('aria-checked'), 'true');
+    assert.match(await status.textContent(), /Exports include all 12 records/);
+    assert.equal(await saveDownload(jsonButton, 'inspection-full.json'), toJSON(await run(EXAMPLES[0].source)));
+    await page.screenshot({ path: path.join(evidence, 'inspect-missing.png'), fullPage: true });
+    await inspectButton('duplicate').click();
+    assert.deepEqual(await rowNumbers(), ['4', '8', '12']);
+    assert.equal(await page.locator('.value-repeat').count(), 3);
+    assert.match(await page.locator('#inspection-note').textContent(), /Reference IDs may repeat normally/);
+    await page.screenshot({ path: path.join(evidence, 'inspect-repeat.png'), fullPage: true });
+    await inspectButton('null').focus();
+    await page.keyboard.press('Space');
+    assert.deepEqual(await rowNumbers(), ['3', '6', '9', '12']);
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.inspect), 'null');
+    await page.keyboard.press('ArrowLeft');
+    assert.equal(await inspectButton('missing').getAttribute('aria-checked'), 'true');
+    assert.equal(await page.evaluate(() => document.activeElement.dataset.inspect), 'missing');
+    await page.keyboard.press('Home');
+    assert.equal(await inspectButton('all').getAttribute('aria-checked'), 'true');
+    assert.equal(await page.getByRole('radiogroup', { name: 'Inspect generated edge cases' }).count(), 1);
+    assert.equal(await page.locator('#status').getAttribute('role'), 'status');
+    assert.equal(await page.locator('.value-null .sr-only').first().textContent(), 'Explicit null value');
+    for (let repeat = 0; repeat < 8; repeat++) {
+      await inspectButton('all').click();
+      await inspectButton('missing').click();
+    }
+    assert.deepEqual(await rowNumbers(), ['4', '8', '12']);
+  });
+  await check('Inspection is scoped per table; JSON and CSV remain unfiltered across format switches', async () => {
+    await page.getByRole('tab', { name: 'JSON', exact: true }).click();
+    assert.equal(await page.locator('#inspection').isVisible(), false);
+    assert((await page.locator('#result-panel pre').textContent()).includes('Person 1'));
+    await page.getByRole('tab', { name: 'CSV', exact: true }).click();
+    await page.getByLabel('CSV export mode').selectOption('raw');
+    const data = await run(EXAMPLES[0].source);
+    assert.equal(await saveDownload(csvButton, 'inspection-unfiltered.csv'), toCSV(data.tables[0], { mode: 'raw' }).text);
+    await page.getByRole('tab', { name: 'Table', exact: true }).click();
+    assert.deepEqual(await rowNumbers(), ['4', '8', '12']);
+    await page.locator('#table').selectOption('1');
+    assert.equal(await inspectButton('all').getAttribute('aria-checked'), 'true');
+    const counts = inspectTable(data.tables[1]).counts;
+    for (const [kind, count] of Object.entries(counts)) assert.equal(await inspectButton(kind).locator('[data-count]').textContent(), String(count));
+    await inspectButton('missing').click();
+    assert.equal(await page.locator('#result-panel tbody tr').count(), 0);
+    assert.equal(await page.locator('#result-panel table').count(), 0);
+    assert.match(await page.locator('#result-panel .placeholder').textContent(), /No records with missing keys in signups/);
+    await page.screenshot({ path: path.join(evidence, 'inspect-empty.png'), fullPage: true });
+  });
+  await check('Inspection does not admit stale, interrupted or erroneous results; successful runs reset the filter', async () => {
+    await editor.fill('fixture bad seed 1 {');
+    assert.equal(await inspectButton('missing').isEnabled(), false);
+    assert.match(await page.locator('#inspection-note').textContent(), /^Previous result/);
+    await runButton.click();
+    await page.locator('#diagnostic').waitFor({ state: 'visible' });
+    assert.equal(await inspectButton('all').isEnabled(), false);
+    await page.getByLabel('Start with').selectOption('bounded-workload');
+    await runButton.click();
+    assert.equal(await inspectButton('all').isEnabled(), false);
+    await page.locator('#cancel').click();
+    await page.waitForTimeout(300);
+    assert.equal(await inspectButton('all').isEnabled(), false);
+    await example('importer-edges');
+    await generated('30');
+    assert.equal(await inspectButton('all').getAttribute('aria-checked'), 'true');
+    assert.equal(await page.locator('#result-panel tbody tr').count(), 12);
+  });
+  await check('Inspection finds edge cases beyond the unfiltered preview and stays bounded on the maximum fixture', async () => {
+    await editor.fill('fixture later seed 1 { table t rows 1000 { id: id = seq(1); value: string = pick("ok") missing every 150; } }');
+    await runButton.click();await generated('1,000');
+    assert.equal(await page.locator('.value-missing').count(), 0);
+    assert.equal(await inspectButton('missing').locator('[data-count]').textContent(), '6');
+    await inspectButton('missing').click();
+    assert.deepEqual(await rowNumbers(), ['150', '300', '450', '600', '750', '900']);
+    await example('bounded-workload');await generated('20,000');
+    await inspectButton('missing').click();
+    assert.equal(await page.locator('#result-panel tbody tr').count(), 100);
+    assert.equal(await inspectButton('missing').locator('[data-count]').textContent(), '1,000');
+    assert.equal((await rowNumbers())[0], '10');
+    assert.equal((await rowNumbers()).at(-1), '1000');
+    const sample = await page.evaluate(async () => {
+      const { inspectTable } = await import('/src/inspect.js');
+      const { run } = await import('/src/language.js');
+      const { EXAMPLES } = await import('/src/examples.js');
+      const data = await run(EXAMPLES[3].source);
+      const start = performance.now();
+      const inspected = data.tables.map(inspectTable);
+      return { milliseconds: performance.now() - start, records: inspected.reduce((sum, result) => sum + result.rows.length, 0) };
+    });
+    assert.equal(sample.records, 20000);
+    await writeFile(path.join(evidence, 'inspection-performance.json'), JSON.stringify({ ...sample, note: 'One desktop Chromium sample, not a cross-device benchmark or guaranteed budget.' }, null, 2));
+  });
+  await check('Inspection works at 390px/320px, keyboard activation and reduced motion without layout overflow', async () => {
+    await example('importer-edges');await generated('30');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      await inspectButton('null').focus();await page.keyboard.press('Enter');
+      assert.deepEqual(await rowNumbers(), ['3', '6', '9', '12']);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      assert.equal(await inspectButton('null').evaluate(node => getComputedStyle(node).transitionDuration), '0s');
+      assert((await inspectButton('null').boundingBox()).height >= 44);
+      const frame = await page.locator('#result-panel').boundingBox();
+      const cell = await page.locator('.inspected-cell').first().boundingBox();
+      const rowIndex = await page.locator('#result-panel tbody .row-index').first().boundingBox();
+      assert(cell.x >= rowIndex.x + rowIndex.width && cell.x + cell.width <= frame.x + frame.width);
+      assert(rowIndex.x >= frame.x && rowIndex.x < frame.x + 3);
+      await page.screenshot({ path: path.join(evidence, `inspect-mobile-${width}.png`), fullPage: true });
+    }
+    await page.setViewportSize({ width: 1440, height: 1050 });
   });
   await check('No page/console errors and no external requests', async () => {
     assert.deepEqual(failures, []);

@@ -24,6 +24,14 @@ npm run build
 
 The optional `npm run test:browser` suite requires a separately installed `playwright-core` package and Chromium. If needed, point `FIXTURELANG_PLAYWRIGHT` to that package's path. This is development-only tooling; the application itself has no third-party runtime dependencies.
 
+## See the edge case in a minute
+
+The opening **Importer edge cases** example generates two related tables. In **Inspect edge cases**, choose **Missing keys**: the table isolates original rows 4, 8 and 12 and highlights absent email keys. Choose **Null values** to see keys that exist with an explicit null, or **Repeated IDs** to find later occurrences of ID values. Choose **All records** to return to the table.
+
+Counts describe actual generated cells in the selected table; **All records** counts rows. Repeated references may be valid: this view observes values and does not validate an importer's uniqueness policy. Filters scan the full bounded table, so a case after row 100 can still be found. At most 100 matching records are rendered, with original row numbers. Arrow keys switch inspection choices; source edits disable the previous result's inspector until a successful run.
+
+Inspection never changes a fixture. The filter only changes the table view. JSON and CSV previews retain their usual cap of 100 rows per table; downloads include the complete dataset regardless of the filter. Run the same source again to reproduce the same exported bytes. The language semantics remain version 0.1; playground release 0.1.1 adds inspection only.
+
 To generate output without the playground, use the local CLI. CSV requires both a selected table and an explicit export mode:
 
 ```sh

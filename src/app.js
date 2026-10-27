@@ -1,5 +1,6 @@
 import { EXAMPLES } from './examples.js';
 import { toCSV, toJSON } from './export.js';
+import { inspectTable } from './inspect.js';
 
 const $ = (id) => document.getElementById(id);
 const source = $('source');
@@ -15,11 +16,28 @@ let activeTab = 'table';
 let diagnostic = null;
 let runSerial = 0;
 let resultSource = null;
+let inspectionFilter = 'all';
+const inspections = new WeakMap();
+const inspectionButtons = [...document.querySelectorAll('[data-inspect]')];
+const inspectionLabels = { all: 'all records', duplicate: 'repeated IDs', missing: 'missing keys', null: 'null values' };
+
+function inspectionFor(table) {
+  if (!inspections.has(table)) inspections.set(table, inspectTable(table));
+  return inspections.get(table);
+}
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
   if (className) node.className = className;
+  return node;
+}
+
+function marker(text, className, label) {
+  const node = element('span', undefined, className);
+  const visible = element('span', text);
+  visible.setAttribute('aria-hidden', 'true');
+  node.append(element('span', label, 'sr-only'), visible);
   return node;
 }
 
@@ -34,6 +52,8 @@ function controls() {
   $('download-json').disabled = !dataset || !fresh || worker !== null;
   $('download-csv').disabled = !dataset || !fresh || !modeSelect.value || worker !== null;
   tableSelect.disabled = !dataset;
+  inspectionButtons.forEach(button => { button.disabled = !fresh || worker !== null; });
+  if (dataset) inspectionNote(dataset.tables[Number(tableSelect.value) || 0]);
   $('stale').hidden = !dataset || fresh;
   $('stale').textContent = worker
     ? 'Generating… previous result shown. Exports wait for completion.'
@@ -119,6 +139,7 @@ function runFixture() {
       dataset = data.dataset;
       resultSource = requestedSource;
       fresh = true;
+      inspectionFilter = 'all';
       tableSelect.replaceChildren(...dataset.tables.map((table, index) => {
         const option = element('option', table.name);
         option.value = String(index);
@@ -150,9 +171,45 @@ function csvExplanation(result) {
   return `Spreadsheet-safe: a leading apostrophe is added to formula-like text. This changes the test payload; numeric negatives stay numeric.${extra} Missing and null are empty cells.`;
 }
 
+function inspectionNote(table, matchingRows) {
+  if (!fresh || worker) {
+    $('inspection-note').textContent = 'Previous result. Run the current source to inspect its edge cases.';
+    return;
+  }
+  const explanation = {
+    all: 'Counts are cells; All records counts rows. Repeated reference IDs may be valid. Select an edge case to inspect it.',
+    duplicate: 'Later occurrences in each id field are marked repeat. Reference IDs may repeat normally.',
+    missing: 'Highlighted keys are absent from the record. JSON omits them; CSV exports an empty cell.',
+    null: 'Highlighted keys exist with a null value. JSON preserves null; CSV exports an empty cell.',
+  };
+  $('inspection-note').textContent = `${explanation[inspectionFilter]} Exports include all ${table.rows.length.toLocaleString('en-US')} records.`;
+  if (matchingRows !== undefined && inspectionFilter !== 'all') {
+    $('preview-note').textContent = `${Math.min(100, matchingRows)} of ${matchingRows.toLocaleString('en-US')} matching records shown · original row numbers`;
+  }
+}
+
 function renderTable(table) {
+  const inspection = inspectionFor(table);
+  const matchingRows = inspectionFilter === 'all'
+    ? inspection.rows : inspection.rows.filter(row => row[inspectionFilter].length > 0);
+  inspectionButtons.forEach(button => {
+    button.querySelector('[data-count]').textContent = inspection.counts[button.dataset.inspect].toLocaleString('en-US');
+    const selected = button.dataset.inspect === inspectionFilter;
+    button.setAttribute('aria-checked', String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  });
+  inspectionNote(table, matchingRows.length);
+  panel.scrollTop = 0;
+  panel.scrollLeft = 0;
+  if (!matchingRows.length) {
+    panel.append(element('p', table.rows.length
+      ? `No records with ${inspectionLabels[inspectionFilter]} in ${table.name}. Choose All records to return to the complete table.`
+      : 'This table intentionally contains zero rows.', 'placeholder'));
+    return;
+  }
   const grid = element('table');
   grid.setAttribute('aria-label', `${table.name} generated records`);
+  grid.setAttribute('aria-describedby', 'inspection-note');
   const head = element('thead');
   const headers = element('tr');
   const numberHeader = element('th', '#', 'row-index');
@@ -166,32 +223,51 @@ function renderTable(table) {
   }
   head.append(headers);
   const body = element('tbody');
-  table.rows.slice(0, 100).forEach((record, index) => {
+  matchingRows.slice(0, 100).forEach((findings) => {
+    const { index } = findings;
+    const record = table.rows[index];
     const row = element('tr');
     row.append(element('td', String(index + 1), 'row-index'));
     for (const field of table.fields) {
       const cell = element('td');
-      if (!Object.hasOwn(record, field.name)) cell.append(element('span', 'missing', 'value-missing'));
-      else if (record[field.name] === null) cell.append(element('span', 'null', 'value-null'));
-      else if (record[field.name] === '') cell.append(element('span', '""', 'empty-string'));
+      if (!Object.hasOwn(record, field.name)) cell.append(marker('missing', 'value-missing', 'Absent key'));
+      else if (record[field.name] === null) cell.append(marker('null', 'value-null', 'Explicit null value'));
+      else if (record[field.name] === '') cell.append(marker('""', 'empty-string', 'Empty string'));
       else {
         cell.textContent = String(record[field.name]);
         cell.title = String(record[field.name]);
         if (typeof record[field.name] === 'boolean') cell.className = 'value-bool';
       }
+      if (findings.duplicate.includes(field.name)) {
+        const badge = marker('repeat', 'value-repeat', 'Later repeated ID value');
+        badge.title = 'Repeated value after the first occurrence in this id field. References may repeat normally.';
+        cell.append(badge);
+      }
+      if (inspectionFilter !== 'all' && findings[inspectionFilter].includes(field.name)) cell.classList.add('inspected-cell');
       row.append(cell);
     }
     body.append(row);
   });
   grid.append(head, body);
   panel.append(grid);
-  if (!table.rows.length) panel.append(element('p', 'This table intentionally contains zero rows.', 'placeholder'));
+  // Reveal the selected cell on narrow screens; original row numbers stay pinned.
+  const target = panel.querySelector('.inspected-cell');
+  if (target) {
+    const cell = target.getBoundingClientRect();
+    const frame = panel.getBoundingClientRect();
+    const inset = grid.querySelector('.row-index').getBoundingClientRect().width + 4;
+    if (cell.left < frame.left + inset || cell.right > frame.right) {
+      panel.scrollLeft += cell.left - frame.left - inset;
+    }
+  }
 }
 
 function render() {
   $('csv-options').hidden = activeTab !== 'csv';
   $('csv-explanation').textContent = csvExplanation();
   $('result-panel').setAttribute('aria-labelledby', `tab-${activeTab}`);
+  $('inspection').hidden = activeTab !== 'table' || !dataset;
+  panel.classList.toggle('inspecting', activeTab === 'table' && Boolean(dataset));
   if (!dataset) return;
   const table = dataset.tables[Number(tableSelect.value) || 0];
   $('row-count').textContent = `${table.rows.length.toLocaleString('en-US')} rows`;
@@ -270,8 +346,30 @@ source.addEventListener('keydown', (event) => {
 });
 $('run').addEventListener('click', runFixture);
 $('cancel').addEventListener('click', () => stop());
-tableSelect.addEventListener('change', render);
+tableSelect.addEventListener('change', () => { inspectionFilter = 'all'; render(); });
 modeSelect.addEventListener('change', () => { controls(); render(); });
+inspectionButtons.forEach((button, index) => {
+  button.addEventListener('click', () => {
+    if (!fresh || worker) return;
+    inspectionFilter = button.dataset.inspect;
+    render();
+    const table = dataset.tables[Number(tableSelect.value) || 0];
+    const matches = inspectionFor(table).rows.filter(row => inspectionFilter === 'all' || row[inspectionFilter].length > 0).length;
+    status(`Inspecting ${inspectionLabels[inspectionFilter]} in ${table.name}: ${matches.toLocaleString('en-US')} ${matches === 1 ? 'record' : 'records'}. Exports include all ${table.rows.length.toLocaleString('en-US')} records.`);
+  });
+  button.addEventListener('keydown', event => {
+    if (!fresh || worker) return;
+    let next;
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') next = (index + 1) % inspectionButtons.length;
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') next = (index + inspectionButtons.length - 1) % inspectionButtons.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = inspectionButtons.length - 1;
+    if (next === undefined) return;
+    event.preventDefault();
+    inspectionButtons[next].click();
+    inspectionButtons[next].focus();
+  });
+});
 tabs.forEach((tab, index) => {
   $(`tab-${tab}`).addEventListener('click', () => tabSelect(tab));
   $(`tab-${tab}`).addEventListener('keydown', (event) => {
