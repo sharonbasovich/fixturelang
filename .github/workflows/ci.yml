@@ -1,0 +1,31 @@
+name: Local checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Language, export, and local tooling tests
+        run: npm test
+      - name: Syntax and architecture checks
+        run: npm run check
+      - name: Build local distribution
+        run: npm run build
+      - name: Audit public release allowlist
+        run: node scripts/prepare-release.mjs --audit
+

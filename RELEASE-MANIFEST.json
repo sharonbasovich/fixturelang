@@ -1,0 +1,168 @@
+{
+  "project": "FixtureLang",
+  "version": "0.1.0",
+  "kind": "source",
+  "notes": "UTF-8 text normalized to LF. Paths are relative. This manifest excludes itself.",
+  "files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "bytes": 680,
+      "sha256": "69d337bdff0cb1a01a470d0b426e9aaef22d955665fb15436e0e42f8cdd7defe"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 116,
+      "sha256": "525987bb0203dc6f18cdabaf1a9cdd0e18d9ee31e36a66a90648ecaab4f4be27"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 1081,
+      "sha256": "a074ba2a9d594e8bb1dcb9802cd29817a9a6c213b32392e433a7f6f19a83f7a5"
+    },
+    {
+      "path": "README.md",
+      "bytes": 4791,
+      "sha256": "70132e5e115cc82ae715c85f359ed20059c9fc38e229283d6571efec71c36bf9"
+    },
+    {
+      "path": "docs/QA.md",
+      "bytes": 5016,
+      "sha256": "bd133a71b90d3a103785f0725b2ad6f4c20c3d00f1abfbb252de0dfb753239b9"
+    },
+    {
+      "path": "docs/credits.md",
+      "bytes": 2019,
+      "sha256": "34e5378606c4c844f76cc95370aebf18a68cafd6e3d5141b615d356c46b0231d"
+    },
+    {
+      "path": "docs/demo-outline.md",
+      "bytes": 2985,
+      "sha256": "0b49d305405861699e1abc41a47aef705f6af1c16091a6b93ed8bb78d2776f0b"
+    },
+    {
+      "path": "docs/implementation.md",
+      "bytes": 4345,
+      "sha256": "0d1892488c603e5d74b84427bd3ae525b7ae4118db6d334a309867748702d257"
+    },
+    {
+      "path": "docs/language-reference.md",
+      "bytes": 9625,
+      "sha256": "27dae3835a503b82e2d3677e7c1961baf09aa9ea6a77c633253fec10c38b4a18"
+    },
+    {
+      "path": "docs/limitations.md",
+      "bytes": 2463,
+      "sha256": "73e30fc806fdeaf25c1ce7361817d4780ee0e26ebe586541847dfa0956357e66"
+    },
+    {
+      "path": "examples/bounded-workload.fixture",
+      "bytes": 968,
+      "sha256": "5125941624a6bc5808ca3ba77f54baa7300145cd4d6ad588ada519fec452a593"
+    },
+    {
+      "path": "examples/csv-boundaries.fixture",
+      "bytes": 572,
+      "sha256": "22ae95b00e12e5362b1aaa2d5a388d2d644e7e802671e318e8e6429b73e7e661"
+    },
+    {
+      "path": "examples/importer-edges.fixture",
+      "bytes": 565,
+      "sha256": "a8059949d0ed2861ddf01c2d32a4084009a8a4e4f5b09a9f84fce21afb29928b"
+    },
+    {
+      "path": "examples/related-orders.fixture",
+      "bytes": 375,
+      "sha256": "a7ae102190ee96523f35f064ae7d306120c928941fb09b8cc232144546ea0388"
+    },
+    {
+      "path": "index.html",
+      "bytes": 7273,
+      "sha256": "21a4b0bb85cadfc2d5328c689907304fe32418fdf3edba0f98fcd2a454801583"
+    },
+    {
+      "path": "package.json",
+      "bytes": 524,
+      "sha256": "0bf00cc98a1b1f0d2d0c5e7a0e5876c01ef23ade6c23c05c203d7f69486b1b37"
+    },
+    {
+      "path": "scripts/browser-qa.mjs",
+      "bytes": 12824,
+      "sha256": "6aa7373293e53900224818a0c0da6f439dad3f6db4c785331fbef9e095d17e45"
+    },
+    {
+      "path": "scripts/build.mjs",
+      "bytes": 1529,
+      "sha256": "bb059fac2346a9219b85e9916681c97fa2fa3d95636d079ae69d92f6ca6a8301"
+    },
+    {
+      "path": "scripts/check.mjs",
+      "bytes": 2423,
+      "sha256": "3d759aa81666ea5910385cd3c3a86ae6cb1474c20d5d9632f292cc7cf9aa85b9"
+    },
+    {
+      "path": "scripts/cli.mjs",
+      "bytes": 2804,
+      "sha256": "df00b2c7265529f1ec9806412134b26832d0eb42a7ed21a39938e382c454ca3f"
+    },
+    {
+      "path": "scripts/prepare-release.mjs",
+      "bytes": 14280,
+      "sha256": "68c92624feed846647ee2a0dfd692581a9d3c986a27482620161a1856f72c1a1"
+    },
+    {
+      "path": "scripts/server.mjs",
+      "bytes": 4257,
+      "sha256": "58574cb25c2a52a6604318ffe2fb79aa9b3a367d82ac07f6dee8a16962d47ee3"
+    },
+    {
+      "path": "src/app.js",
+      "bytes": 13341,
+      "sha256": "75f4998afcd7401b9edc502d71b80459d20b435655fff6f9f6cca293425bd7b9"
+    },
+    {
+      "path": "src/examples.js",
+      "bytes": 3364,
+      "sha256": "4182041270c9833c27724df72b8d7cb61dcb287271d46c368916d3817d501aa8"
+    },
+    {
+      "path": "src/export.js",
+      "bytes": 2008,
+      "sha256": "079203b7fb0b08a63ea7c4e9fd79e9a40f696f6f543d1dadd086f83083a1edac"
+    },
+    {
+      "path": "src/language.js",
+      "bytes": 19680,
+      "sha256": "17275529afd827a7002a952d9f309402343a9681c23465be4c7752933c85f472"
+    },
+    {
+      "path": "src/worker.js",
+      "bytes": 562,
+      "sha256": "a5613066a39e6847d061cea1af5b0f34bd14355b7983426a3330af88ebf79c62"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 12526,
+      "sha256": "aec32544bdd0841feee0c234b79354eea306d3d705d1dbf0a00cc8857b3df728"
+    },
+    {
+      "path": "tests/export.test.js",
+      "bytes": 5440,
+      "sha256": "466f65a1bfe7926f0a2c088e7efc8e578295c5bcd11be0bb9465667f563606ef"
+    },
+    {
+      "path": "tests/language.test.js",
+      "bytes": 17245,
+      "sha256": "ab2120ea44a070077bf03d5ebb940f5ebc6839bf3c71506601ed15e2f7fa85a0"
+    },
+    {
+      "path": "tests/review.test.js",
+      "bytes": 4730,
+      "sha256": "adb442c1cab7236f3c6b45eefa9e96ad21567295b892ecec765194007940e962"
+    },
+    {
+      "path": "tests/tooling.test.js",
+      "bytes": 5123,
+      "sha256": "32bbfb6e6219ff7efdeadbfb630de24841b72323a5f4a4b4ea9ec486dc77667f"
+    }
+  ]
+}

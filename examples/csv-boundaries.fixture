@@ -1,0 +1,13 @@
+# Raw CSV preserves the exact strings. Choose spreadsheet mode
+# before opening formula-like text in a spreadsheet application.
+fixture csv_boundaries seed 7 {
+  table payloads rows 16 {
+    id: id = seq(1);
+    formula: string = pick("=1+1", "+SUM(1,2)", "-1+2", "@SUM(A1)", "\tplain", "  =2+2");
+    quoted: string = pick("comma,inside", "say \"hello\"", "line one\nline two", "snowman ☃");
+    empty: string = pick("");
+    missing: string = pick("present") missing every 2;
+    nullable: string = pick("present") null every 3;
+    negative: int = int(-9, -1);
+  }
+}

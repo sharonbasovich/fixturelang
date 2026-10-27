@@ -1,0 +1,17 @@
+# Faults are part of the fixture, not generation failures.
+fixture importer_edges seed 2026 {
+  table people rows 12 {
+    id: id = seq(1) duplicate every 4;
+    name: string = text("Person ");
+    email: string = pick("ada@example.test", "lin@example.test", "sam@example.test") missing every 4;
+    nickname: string = pick("Ada", "Lin", "Sam") null every 3;
+    active: bool = bool(75);
+  }
+
+  table signups rows 18 {
+    id: id = seq(100);
+    person_id: id = ref(people.id);
+    seats: int = int(1, 4);
+    starts: date = date("2026-07-18", "2026-08-01");
+  }
+}

@@ -1,0 +1,12 @@
+dist/
+node_modules/
+*.log
+.DS_Store
+delivery/
+evidence/
+private/
+docs/private/
+DESIGN.md
+docs/REVIEW.md
+.env
+.env.*
