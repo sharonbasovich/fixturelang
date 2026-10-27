@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b5c53">
+  <meta name="description" content="A local, deterministic language for deliberately imperfect test fixtures.">
+  <title>FixtureLang — Make the edge case repeatable.</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./src/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#source">Skip to editor</a>
+  <header class="site-header wrap">
+    <a class="brand" href="./" aria-label="FixtureLang home"><span class="brand-mark" aria-hidden="true">f<span>:</span></span>FixtureLang<span class="version">0.1</span></a>
+    <nav aria-label="Main"><span class="local-note"><span aria-hidden="true">●</span> Runs on your device</span><a href="#reference">Language guide <span aria-hidden="true">↗</span></a></nav>
+  </header>
+  <main class="wrap">
+    <section class="intro" aria-labelledby="title">
+      <div><h1 id="title">Make the edge case<br><em>repeatable.</em></h1><p>Describe the data your importer should survive.<br>Seed it. Break it on purpose. Get the same fixture again.</p></div>
+      <div class="intro-note"><span class="note-symbol" aria-hidden="true">{ }</span><p>A small language for test data.<br>Real parsing. Explicit seeds.<br>Deliberately imperfect records.</p></div>
+    </section>
+    <section class="bench" aria-label="Fixture playground">
+      <div class="source-pane">
+        <div class="pane-heading"><h2><span class="section-number">01</span> Source</h2><span class="file-extension">.fixture</span></div>
+        <div class="example-bar"><label for="example">Start with</label><select id="example"></select></div>
+        <p id="example-description" class="example-description"></p>
+        <div class="editor-wrap"><pre id="line-numbers" class="line-numbers" aria-hidden="true"></pre><textarea id="source" aria-label="FixtureLang source" aria-describedby="editor-help source-limit" aria-errormessage="diagnostic-message" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" maxlength="65537"></textarea></div>
+        <div class="editor-footer"><span id="source-limit">0 / 65,536 characters</span><span id="cursor">Ln 1, Col 1</span></div>
+        <div class="run-bar"><button id="run" class="button primary" type="button"><span aria-hidden="true">▶</span> Run fixture</button><button id="cancel" class="button" type="button" disabled>Cancel</button><span id="editor-help">Ctrl / ⌘ + Enter to run</span></div>
+        <div id="diagnostic" class="diagnostic" role="alert" hidden><div class="diagnostic-heading"><strong id="diagnostic-title"></strong><button id="jump-error" type="button">Go to error ↗</button></div><p id="diagnostic-message"></p><pre id="diagnostic-excerpt"></pre></div>
+      </div>
+      <div class="output-pane">
+        <div class="pane-heading"><h2><span class="section-number">02</span> Result</h2><span id="seed-label" class="file-extension">waiting for source</span></div>
+        <div class="result-toolbar"><label for="table">Table</label><select id="table" disabled><option>No tables yet</option></select><span id="row-count"></span></div>
+        <div class="tabs" role="tablist" aria-label="Result format"><button id="tab-table" role="tab" aria-selected="true" aria-controls="result-panel" tabindex="0" type="button">Table</button><button id="tab-json" role="tab" aria-selected="false" aria-controls="result-panel" tabindex="-1" type="button">JSON</button><button id="tab-csv" role="tab" aria-selected="false" aria-controls="result-panel" tabindex="-1" type="button">CSV</button></div>
+        <div id="stale" class="stale" hidden>Source changed. Run again to update this result and enable exports.</div>
+        <div id="csv-options" class="csv-options" hidden><label for="csv-mode">CSV export mode</label><select id="csv-mode"><option value="">Choose how to handle formulas…</option><option value="raw">Exact raw payload</option><option value="spreadsheet">Spreadsheet-safe text</option></select><p id="csv-explanation">Choose a mode before previewing or downloading CSV.</p></div>
+        <div id="result-panel" class="result-panel" role="tabpanel" aria-labelledby="tab-table" tabindex="0"><div class="empty-state"><span aria-hidden="true">[ ]</span><p>Your fixture takes shape here.</p><small>Run the source to inspect generated records.</small></div></div>
+        <div class="result-footer"><span id="preview-note">Preview is capped at 100 rows per table.</span><span class="legend"><i class="missing-dot" aria-hidden="true"></i> missing <i class="null-dot" aria-hidden="true"></i> null</span></div>
+        <div class="export-bar"><button id="download-json" class="button" type="button" disabled>↓ JSON dataset</button><button id="download-csv" class="button" type="button" disabled>↓ CSV table</button><button id="download-source" class="text-button" type="button">Save source</button></div>
+        <p class="csv-disclosure">JSON distinguishes missing, null, and empty strings. CSV maps all three to empty cells.</p>
+      </div>
+    </section>
+    <div class="status-bar"><span id="status-dot" class="status-dot" aria-hidden="true"></span><p id="status" role="status" aria-live="polite" aria-atomic="true">Ready to run.</p><span>Local · no accounts · no API</span></div>
+    <section class="reference" id="reference" aria-labelledby="reference-title">
+      <div class="reference-intro"><h2 id="reference-title">Small enough to learn.<br> Precise enough to trust.</h2><p>Five types. Seven generators. Three ways to make a record imperfect.</p><a href="./docs/language-reference.md">Read the full reference ↗</a><a href="./docs/demo-outline.md">Demo outline ↗</a></div>
+      <div class="reference-content">
+        <div class="guide-row"><h3>Give chance a seed.</h3><div><code>fixture imports seed 42 { … }</code><p>One required seed, one defined draw order. The same source produces the same data.</p></div></div>
+        <div class="guide-row"><h3>Describe a field.</h3><div><code>age: int = int(18, 85);</code><p>Use <b>id</b>, <b>int</b>, <b>string</b>, <b>bool</b>, or <b>date</b>. Values are typed, never inferred.</p></div></div>
+        <div class="guide-row"><h3>Connect the records.</h3><div><code>person_id: id = ref(people.id);</code><p>Reference a generated ID in an earlier table. Relations use values that actually exist after mutations.</p></div></div>
+        <div class="guide-row"><h3>Make trouble explicit.</h3><div><code>id: id = seq(1) duplicate every 4;</code><p><b>missing every 3</b> omits a key. <b>null every 3</b> keeps it with null. <b>duplicate every 4</b> copies the previous final ID.</p></div></div>
+        <div class="limits-note"><strong>Bounded by design.</strong><p>20,000 total rows · 200,000 cells · 8 tables · 32 fields per table. No loops, functions, file access, or source execution. Work runs in a cancellable worker.</p></div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer wrap"><span>FixtureLang 0.1 — deterministic data, intentional faults.</span><span>Local prototype for Syntax Summit</span></footer>
+</body>
+</html>

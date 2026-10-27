@@ -1,0 +1,14 @@
+fixture shop seed 42 {
+  table customers rows 6 {
+    id: id = seq(1);
+    name: string = text("Customer ");
+    tier: string = pick("free", "pro", "team");
+  }
+  table orders rows 12 {
+    id: id = seq(1001);
+    customer_id: id = ref(customers.id);
+    total_cents: int = int(0, 25000);
+    paid: bool = bool(80);
+    placed: date = date("2024-02-28", "2024-03-02");
+  }
+}

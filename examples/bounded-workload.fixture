@@ -1,0 +1,27 @@
+# Exactly the row and cell budgets; useful for cancellation.
+fixture workload seed 123456789 {
+  table users rows 10000 {
+    id: id = seq(1);
+    name: string = text("User ");
+    region: string = pick("north", "south", "east", "west");
+    score: int = int(0, 1000000);
+    active: bool = bool(70);
+    joined: date = date("2000-01-01", "2026-10-26");
+    label: string = pick("alpha", "beta", "gamma");
+    note: string = text("row-") missing every 10;
+    quota: int = int(1, 1000);
+    optional: string = pick("value") null every 7;
+  }
+  table events rows 10000 {
+    id: id = seq(1);
+    user_id: id = ref(users.id);
+    kind: string = pick("open", "save", "close");
+    amount: int = int(-1000, 1000);
+    accepted: bool = bool(90);
+    happened: date = date("2020-01-01", "2026-10-26");
+    label: string = text("Event ");
+    source: string = pick("web", "mobile");
+    attempt: int = int(1, 5);
+    comment: string = text("comment-") missing every 3;
+  }
+}
