@@ -1,17 +1,17 @@
 # Testing and verification
 
-> This runnable web bundle omits development tests and scripts. The commands below describe the full source archive, `fixturelang-0.1.0.zip`, which includes those files.
+> This runnable web bundle omits development tests and scripts. The commands below describe the full source archive, `fixturelang-0.1.1.zip`, which includes those files.
 
-FixtureLang includes executable tests for its language, exports, local tooling and browser interactions. The checks below describe a verification snapshot from 2026-10-26, not a security certification or a promise of compatibility with every browser or spreadsheet application.
+FixtureLang includes executable tests for its language, exports, local tooling and browser interactions. The checks below describe a verification snapshot from 2026-10-27, not a security certification or a promise of compatibility with every browser or spreadsheet application.
 
 ## Recorded results
 
 | Command or check | Result |
 | --- | --- |
-| `npm test` | 39 tests passed; no failures or skips |
-| `npm run check` | 15 JavaScript files passed Node syntax checks and the configured architecture checks in the extracted source release |
+| `npm test` | 44 tests passed; no failures or skips |
+| `npm run check` | 17 JavaScript files passed Node syntax checks and the configured architecture checks |
 | `npm run build` | Static distribution generated successfully; source/distribution byte equality checked |
-| `npm run test:browser` | 12 browser scenarios passed in Chromium 156.0.8078.4 |
+| `npm run test:browser` | 17 browser scenarios passed in Chromium 156.0.8078.4 |
 | Browser page and console errors | None recorded during those scenarios |
 | External browser requests | None recorded during those scenarios |
 
@@ -74,6 +74,10 @@ The 12 scenarios cover:
 10. Editable source, working run/export controls and no page-level horizontal overflow at 390px and 320px widths.
 11. Keyboard skip link, visible focus and documentation routes.
 12. Page/console errors and external requests.
+
+The 0.1.1 inspection pass adds five scenario groups: exact cell counts and matching records with original row numbers; full exports across filters/format switches; per-table scope and truthful empty results; stale/error/interrupted runs and filter resets; cases beyond the original preview, bounded maximum-fixture rendering, keyboard radio selection, narrow viewports and reduced motion. Automated checks also confirm explicit accessible marker text, a polite status region, and horizontal reveal of highlighted cells while row numbers remain pinned. These are DOM/focus checks, not a manual screen-reader audit.
+
+A single desktop Chromium sample scanned the full 20,000-row/200,000-cell fixture in approximately 11 ms. The inspector caches each completed table and renders at most 100 matching records. This observation is not a cross-device benchmark or a guaranteed timing budget.
 
 ## Verification limits
 

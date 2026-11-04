@@ -1,6 +1,6 @@
 {
   "project": "FixtureLang",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "kind": "runnable-web",
   "notes": "UTF-8 text normalized to LF. Paths are relative. This manifest excludes itself.",
   "files": [
@@ -12,17 +12,17 @@
     {
       "path": "README.md",
       "bytes": 682,
-      "sha256": "1ef6455ca6209a2600243bc39c7b906c5e1fc0beae97e3d1d659edc76dc02632"
+      "sha256": "cdbc624bcc5a40d9b2847fed0f4a0a9bcaa38e39a05438490ff3c1d05b680316"
     },
     {
       "path": "docs/QA.md",
-      "bytes": 5232,
-      "sha256": "95be1ac082e25a36d5f16364d4f631871f8e6823f45aed31c34d2275d32d92e6"
+      "bytes": 6086,
+      "sha256": "44c217d5a2292fb4322ab166bcd73cc00131eef501d6293ea29ae14df26f69ab"
     },
     {
       "path": "docs/credits.md",
-      "bytes": 2019,
-      "sha256": "34e5378606c4c844f76cc95370aebf18a68cafd6e3d5141b615d356c46b0231d"
+      "bytes": 2481,
+      "sha256": "ccb082633c82e51e6ae3d1885bd1ab26539cb9e04115809419476278d7432bd3"
     },
     {
       "path": "docs/demo-outline.md",
@@ -66,13 +66,13 @@
     },
     {
       "path": "index.html",
-      "bytes": 7273,
-      "sha256": "21a4b0bb85cadfc2d5328c689907304fe32418fdf3edba0f98fcd2a454801583"
+      "bytes": 8326,
+      "sha256": "fd5e103eaf7a1bb6b9bacb9cd8d967dd79ee6bac9257c7bdedef5c02d86f45b6"
     },
     {
       "path": "package.json",
       "bytes": 191,
-      "sha256": "3e441fced1cd7b9922c22ecc100588f8cb565a08262cbf9005909a91754f2720"
+      "sha256": "1e68304243b46895255320058f9f91cd140d48458cb12bf9a223f09b15b16782"
     },
     {
       "path": "scripts/server.mjs",
@@ -81,8 +81,8 @@
     },
     {
       "path": "src/app.js",
-      "bytes": 13341,
-      "sha256": "75f4998afcd7401b9edc502d71b80459d20b435655fff6f9f6cca293425bd7b9"
+      "bytes": 18546,
+      "sha256": "ac40d2822fe4d84b09fbe3ffef388976fa125986295e316bb484b4c5a67ad87c"
     },
     {
       "path": "src/examples.js",
@@ -93,6 +93,11 @@
       "path": "src/export.js",
       "bytes": 2008,
       "sha256": "079203b7fb0b08a63ea7c4e9fd79e9a40f696f6f543d1dadd086f83083a1edac"
+    },
+    {
+      "path": "src/inspect.js",
+      "bytes": 925,
+      "sha256": "80d80229d81a95b4124dce9d39b01c561932699b44c1d9dd337f46c5006c89fa"
     },
     {
       "path": "src/language.js",
@@ -106,8 +111,8 @@
     },
     {
       "path": "styles.css",
-      "bytes": 12526,
-      "sha256": "aec32544bdd0841feee0c234b79354eea306d3d705d1dbf0a00cc8857b3df728"
+      "bytes": 15410,
+      "sha256": "1ffa4a703f3c4c6f4bed83b6ba29f9706717bf8ec45c93cf41c66c59e74d7326"
     }
   ]
 }
