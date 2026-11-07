@@ -103,7 +103,7 @@ t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
 const draw = ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 ```
 
-The same source and version produce the same ordered data and export bytes. Changing whitespace or comments does not change generated data. Changing the seed, table/field order, random generator count, choices or modifiers may change results. Row extension can change later tables because they share the random stream. This is a fixture generator, not a cryptographic source or an independent-per-field random model. An algorithm change requires a documented language version change.
+The same source and application version produce the same ordered data and export bytes. Language semantics remain version 0.1. Application 0.1.2 changes only the CSV spelling of empty single-column records to `""`; earlier releases used blank lines. Generated values, random draws and JSON remain unchanged. Changing whitespace or comments does not change generated data. Changing the seed, table/field order, random generator count, choices or modifiers may change results. Row extension can change later tables because they share the random stream. This is a fixture generator, not a cryptographic source or an independent-per-field random model. An algorithm change requires a documented language version change.
 
 ## Fixed budgets
 
@@ -137,7 +137,7 @@ JSON exports the whole fixture:
 }
 ```
 
-The illustration shows one row; real exports include all completed rows. CSV exports one selected table with field names as the header, CRLF record endings, and doubled quotes inside quoted cells. Commas, quotes, CR and LF trigger quoting. Missing, null and empty strings all appear as empty cells; JSON is necessary to retain the distinction.
+The illustration shows one row; real exports include all completed rows. CSV exports one selected table with field names as the header, CRLF record endings, and doubled quotes inside quoted cells. Commas, quotes, CR and LF trigger quoting. Missing, null and empty strings all appear as empty cells; JSON is necessary to retain the distinction. A one-column empty record is explicitly quoted as `""` in both CSV modes so it is not mistaken for a blank line. Multi-column empty cells keep the existing comma-separated representation.
 
 `raw` mode preserves string payloads exactly. `spreadsheet` mode prepends `'` to string cells or headers beginning with tab, CR or LF, or with optional whitespace followed by `=`, `+`, `-` or `@`. Unicode whitespace is included before formula markers. Negative integer values remain numeric and are not prefixed. The protected-cell count includes protected headers. This is an explicit transformation and never mutates the generated dataset. Spreadsheet behavior varies; the mode does not promise universal protection after later edits, re-exports or format conversions.
 
