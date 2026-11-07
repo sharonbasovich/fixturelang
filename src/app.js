@@ -1,6 +1,7 @@
 import { EXAMPLES } from './examples.js';
 import { toCSV, toJSON } from './export.js';
 import { inspectTable } from './inspect.js';
+import { sourceExample, needsSourceProtection } from './source-state.js';
 
 const $ = (id) => document.getElementById(id);
 const source = $('source');
@@ -17,9 +18,26 @@ let diagnostic = null;
 let runSerial = 0;
 let resultSource = null;
 let inspectionFilter = 'all';
+let sourceProtected = false;
 const inspections = new WeakMap();
 const inspectionButtons = [...document.querySelectorAll('[data-inspect]')];
 const inspectionLabels = { all: 'all records', duplicate: 'repeated IDs', missing: 'missing keys', null: 'null values' };
+
+function warnBeforeExit(event) {
+  event.preventDefault();
+  event.returnValue = '';
+}
+
+function protectSource() {
+  const needed = needsSourceProtection(source.value);
+  if (needed !== sourceProtected) {
+    if (needed) window.addEventListener('beforeunload', warnBeforeExit);
+    else window.removeEventListener('beforeunload', warnBeforeExit);
+    sourceProtected = needed;
+  }
+  $('source-protection').hidden = !needed;
+  source.setAttribute('aria-describedby', `editor-help source-limit${needed ? ' source-protection' : ''}`);
+}
 
 function inspectionFor(table) {
   if (!inspections.has(table)) inspections.set(table, inspectTable(table));
@@ -94,6 +112,7 @@ function edit() {
   exampleSelect.value = '';
   $('example-description').textContent = 'Your custom fixture. Nothing leaves this browser.';
   editorMetrics();
+  protectSource();
   controls();
   status(dataset ? 'Source changed. Previous result is out of date.' : 'Ready to run your source.');
 }
@@ -314,6 +333,10 @@ function download(text, filename, type) {
 function loadExample(id) {
   const example = EXAMPLES.find((item) => item.id === id);
   if (!example) return;
+  if (needsSourceProtection(source.value) && !window.confirm('Replace your custom fixture source with this example? Choose Cancel to keep it. Save source and check the downloaded file first if you want to retain it.')) {
+    exampleSelect.value = sourceExample(source.value);
+    return;
+  }
   stop('Example loaded. Run when ready.');
   source.value = example.source;
   source.setSelectionRange(0, 0);
@@ -322,6 +345,7 @@ function loadExample(id) {
   $('example-description').textContent = example.description;
   source.removeAttribute('aria-invalid');
   editorMetrics();
+  protectSource();
   controls();
   status(`${example.title} loaded. Run fixture to generate data.`);
 }
@@ -408,7 +432,7 @@ $('download-csv').addEventListener('click', () => {
 });
 $('download-source').addEventListener('click', () => {
   download(source.value, fresh && dataset ? `${dataset.name}.fixture` : 'source.fixture', 'text/plain;charset=utf-8');
-  status('Downloaded the current FixtureLang source.');
+  status('Source download requested. Check the saved file before leaving. A download request does not clear the custom-source warning.');
 });
 window.addEventListener('pagehide', () => stop('Generation stopped when the page was left. Run again to continue.'));
 exampleSelect.value = EXAMPLES[0].id;

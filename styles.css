@@ -23,3 +23,5 @@
 .result-panel td.row-index{position:sticky;left:0;z-index:1;background:white}.result-panel th.row-index{left:0;z-index:3}
 
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* This notice is scoped to custom source, never to reproducible examples. */
+.source-protection{margin:0 20px 16px;padding:12px;border-left:3px solid #9a5800;background:#fff5df;color:#3f3520;font-size:.85rem;line-height:1.5;overflow-wrap:anywhere}.source-protection[hidden]{display:none}

@@ -84,6 +84,33 @@ test('CSV field order, own properties and adversarial names are retained', () =>
   assert.equal({}.polluted, undefined);
 });
 
+test('single-column empty cells are explicit records, not blank lines', () => {
+  const table = tableWith([{}, { value: null }, { value: '' }, { value: false }, { value: 0 }, { value: '' }]);
+  const snapshot = JSON.stringify(table);
+  for (const mode of ['raw', 'spreadsheet']) {
+    const output = toCSV(table, { mode });
+    // A blank CSV line is read as zero fields by common parsers. Quoting the
+    // only empty cell preserves one field and prevents blank-line skipping.
+    assert.equal(output.text, 'value\r\n""\r\n""\r\n""\r\nfalse\r\n0\r\n""\r\n');
+    assert.equal(output.missingCells, 1);
+    assert.equal(output.nullCells, 1);
+    assert.equal(output.protectedCells, 0);
+    assert.equal(toCSV(tableWith([]), { mode }).text, 'value\r\n');
+  }
+  assert.equal(JSON.stringify(table), snapshot);
+});
+
+test('empty cells in multi-column records retain their existing CSV bytes', () => {
+  const table = tableWith([{}, { left: null, right: '' }, { left: '', right: 0 }], ['left', 'right']);
+  for (const mode of ['raw', 'spreadsheet']) {
+    const output = toCSV(table, { mode });
+    assert.equal(output.text, 'left,right\r\n,\r\n,\r\n,0\r\n');
+    assert.equal(output.missingCells, 2);
+    assert.equal(output.nullCells, 1);
+    assert.equal(output.protectedCells, 0);
+  }
+});
+
 test('JSON retains primitive types, missing vs null and prototype-looking table names', () => {
   const rows = [{ a: null, b: false, c: 42, d: '雪' }, {}];
   const dataset = { name: 'sample', seed: 0, tables: [{ name: '__proto__', rows }, { name: 'constructor', rows: [] }] };

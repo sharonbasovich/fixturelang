@@ -13,7 +13,7 @@
 <body>
   <a class="skip" href="#source">Skip to editor</a>
   <header class="site-header wrap">
-    <a class="brand" href="./" aria-label="FixtureLang home"><span class="brand-mark" aria-hidden="true">f<span>:</span></span>FixtureLang<span class="version">0.1.1</span></a>
+    <a class="brand" href="./" aria-label="FixtureLang home"><span class="brand-mark" aria-hidden="true">f<span>:</span></span>FixtureLang<span class="version">0.1.2</span></a>
     <nav aria-label="Main"><span class="local-note"><span aria-hidden="true">●</span> Runs on your device</span><a href="#reference">Language guide <span aria-hidden="true">↗</span></a></nav>
   </header>
   <main class="wrap">
@@ -29,6 +29,7 @@
         <div class="editor-wrap"><pre id="line-numbers" class="line-numbers" aria-hidden="true"></pre><textarea id="source" aria-label="FixtureLang source" aria-describedby="editor-help source-limit" aria-errormessage="diagnostic-message" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" maxlength="65537"></textarea></div>
         <div class="editor-footer"><span id="source-limit">0 / 65,536 characters</span><span id="cursor">Ln 1, Col 1</span></div>
         <div class="run-bar"><button id="run" class="button primary" type="button"><span aria-hidden="true">▶</span> Run fixture</button><button id="cancel" class="button" type="button" disabled>Cancel</button><span id="editor-help">Ctrl / ⌘ + Enter to run</span></div>
+        <p id="source-protection" class="source-protection" hidden>Custom source stays in this tab. Use Save source and check the file before leaving. Browser exit warnings are best effort and may still appear after a download request. Warnings do not save your work.</p>
         <div id="diagnostic" class="diagnostic" role="alert" hidden><div class="diagnostic-heading"><strong id="diagnostic-title"></strong><button id="jump-error" type="button">Go to error ↗</button></div><p id="diagnostic-message"></p><pre id="diagnostic-excerpt"></pre></div>
       </div>
       <div class="output-pane">
@@ -65,6 +66,6 @@
       </div>
     </section>
   </main>
-  <footer class="site-footer wrap"><span>FixtureLang 0.1.1 — deterministic data, intentional faults.</span><span>Local prototype for Syntax Summit</span></footer>
+  <footer class="site-footer wrap"><span>FixtureLang 0.1.2 — deterministic data, intentional faults.</span><span>Local prototype for Syntax Summit</span></footer>
 </body>
 </html>

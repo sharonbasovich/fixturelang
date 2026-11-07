@@ -1,6 +1,6 @@
 {
   "project": "FixtureLang",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "kind": "source",
   "notes": "UTF-8 text normalized to LF. Paths are relative. This manifest excludes itself.",
   "files": [
@@ -21,13 +21,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 6044,
-      "sha256": "b3fae92101a5f00e6d1a6d083ba45ee6e47aa01a1aa7730856f1402a159c2e58"
+      "bytes": 7058,
+      "sha256": "b5f63ada885bd35b7c1e68fa5c0301769cf137ed47e9bc6efcbe630ba1d39f50"
     },
     {
       "path": "docs/QA.md",
-      "bytes": 5870,
-      "sha256": "6c705836a7bdd5e56392abe5be37825b74c25dfbe2e49023aa5caaef5980f324"
+      "bytes": 8901,
+      "sha256": "fe0dc2b248d41b63eddf0cb9f1f8879d2ae208ef7a2d9fdb841262d5721942fe"
     },
     {
       "path": "docs/credits.md",
@@ -46,13 +46,13 @@
     },
     {
       "path": "docs/language-reference.md",
-      "bytes": 9625,
-      "sha256": "27dae3835a503b82e2d3677e7c1961baf09aa9ea6a77c633253fec10c38b4a18"
+      "bytes": 10045,
+      "sha256": "615b70fee26e5897d9e1bcfc3d0c8ae2949eb407849431c50b6a2a8e9dca69ec"
     },
     {
       "path": "docs/limitations.md",
-      "bytes": 2463,
-      "sha256": "73e30fc806fdeaf25c1ce7361817d4780ee0e26ebe586541847dfa0956357e66"
+      "bytes": 2776,
+      "sha256": "a173d17aeec85adb9be69f76f9b315ec22c6f5f278acf611259410d465d91628"
     },
     {
       "path": "examples/bounded-workload.fixture",
@@ -76,18 +76,18 @@
     },
     {
       "path": "index.html",
-      "bytes": 8326,
-      "sha256": "fd5e103eaf7a1bb6b9bacb9cd8d967dd79ee6bac9257c7bdedef5c02d86f45b6"
+      "bytes": 8598,
+      "sha256": "a98ed58894b86a67ce01e66552f0324744a68ae7053505b1b8527328d53f88d7"
     },
     {
       "path": "package.json",
       "bytes": 524,
-      "sha256": "a3bf6fe4735ec016c84918ff297e964dedff76b6fbea869e488c5f172ab7daad"
+      "sha256": "a40c30f156dd2161e60c7535c53894ad6743248197937b207cb429df1360f395"
     },
     {
       "path": "scripts/browser-qa.mjs",
-      "bytes": 21200,
-      "sha256": "64bc8ed33f1e2232e0a2b92d9e7d1b0244a87bff6f7fbb2ff61e51ffd8b9998c"
+      "bytes": 25359,
+      "sha256": "13b5a13a0b7146c17293b776b9ff2e6bf3b063ca3250f38c2294413d61afb210"
     },
     {
       "path": "scripts/build.mjs",
@@ -101,8 +101,8 @@
     },
     {
       "path": "scripts/cli.mjs",
-      "bytes": 2804,
-      "sha256": "df00b2c7265529f1ec9806412134b26832d0eb42a7ed21a39938e382c454ca3f"
+      "bytes": 3279,
+      "sha256": "c6c8cd142f78b49eaa715b03826043ef246b5de9853d995e2e9f7502fd8f1b3c"
     },
     {
       "path": "scripts/prepare-release.mjs",
@@ -116,8 +116,8 @@
     },
     {
       "path": "src/app.js",
-      "bytes": 18546,
-      "sha256": "ac40d2822fe4d84b09fbe3ffef388976fa125986295e316bb484b4c5a67ad87c"
+      "bytes": 19596,
+      "sha256": "1d53f4af5a1867cfe7481fbe517d0398a0030494b755deb5dc100651cc3e3656"
     },
     {
       "path": "src/examples.js",
@@ -126,8 +126,8 @@
     },
     {
       "path": "src/export.js",
-      "bytes": 2008,
-      "sha256": "079203b7fb0b08a63ea7c4e9fd79e9a40f696f6f543d1dadd086f83083a1edac"
+      "bytes": 2235,
+      "sha256": "c74bc20f6f6e7c1b59e760ce7ae1e14a8c556fd38c156030c86f00a159e4b01b"
     },
     {
       "path": "src/inspect.js",
@@ -140,19 +140,24 @@
       "sha256": "17275529afd827a7002a952d9f309402343a9681c23465be4c7752933c85f472"
     },
     {
+      "path": "src/source-state.js",
+      "bytes": 419,
+      "sha256": "061034215310d92ea39b3d88c1c8a4d7584303417578f75b48048ada160f5c0a"
+    },
+    {
       "path": "src/worker.js",
       "bytes": 562,
       "sha256": "a5613066a39e6847d061cea1af5b0f34bd14355b7983426a3330af88ebf79c62"
     },
     {
       "path": "styles.css",
-      "bytes": 15410,
-      "sha256": "1ffa4a703f3c4c6f4bed83b6ba29f9706717bf8ec45c93cf41c66c59e74d7326"
+      "bytes": 15699,
+      "sha256": "d9d84fde1d70e30572ac4aa5705bdd1323458fded61df510389d890b62c12b58"
     },
     {
       "path": "tests/export.test.js",
-      "bytes": 5440,
-      "sha256": "466f65a1bfe7926f0a2c088e7efc8e578295c5bcd11be0bb9465667f563606ef"
+      "bytes": 6728,
+      "sha256": "5ef8718ce1e88af09d8d7e998896060ad89b0aeff7cce0a755e61ada29b7999a"
     },
     {
       "path": "tests/inspect.test.js",
@@ -170,9 +175,14 @@
       "sha256": "adb442c1cab7236f3c6b45eefa9e96ad21567295b892ecec765194007940e962"
     },
     {
+      "path": "tests/source-state.test.js",
+      "bytes": 1298,
+      "sha256": "4d6a63a74e5f2831c8b556f424b3d297e172bf02f398112cd2a7aa6467918db5"
+    },
+    {
       "path": "tests/tooling.test.js",
-      "bytes": 5123,
-      "sha256": "32bbfb6e6219ff7efdeadbfb630de24841b72323a5f4a4b4ea9ec486dc77667f"
+      "bytes": 11652,
+      "sha256": "871513a6d8894ac30b5d755ef3799d2d38fdfa0da278fcec87a094ecc980f2f4"
     }
   ]
 }

@@ -40,7 +40,7 @@ export function toCSV(table, options) {
   };
   const records = [table.fields.map(({ name }) => encode(name)).join(',')];
   for (const row of table.rows) {
-    records.push(table.fields.map(({ name }) => {
+    const cells = table.fields.map(({ name }) => {
       if (!Object.hasOwn(row, name)) {
         missingCells++;
         return '';
@@ -51,7 +51,10 @@ export function toCSV(table, options) {
         return '';
       }
       return encode(value);
-    }).join(','));
+    });
+    // A blank line can mean no fields (or be skipped) to a CSV reader. Make
+    // a one-column empty record explicit, including omitted and null values.
+    records.push(cells.length === 1 && cells[0] === '' ? '""' : cells.join(','));
   }
   return { text: records.join('\r\n') + '\r\n', protectedCells, missingCells, nullCells };
 }
