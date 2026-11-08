@@ -136,8 +136,8 @@
     },
     {
       "path": "src/language.js",
-      "bytes": 19680,
-      "sha256": "17275529afd827a7002a952d9f309402343a9681c23465be4c7752933c85f472"
+      "bytes": 19685,
+      "sha256": "0cac603531fd1e1f174a5dc403c542e4d116d60a8e7beb3044f8ea2b6495b5bb"
     },
     {
       "path": "src/source-state.js",
@@ -166,8 +166,8 @@
     },
     {
       "path": "tests/language.test.js",
-      "bytes": 17245,
-      "sha256": "ab2120ea44a070077bf03d5ebb940f5ebc6839bf3c71506601ed15e2f7fa85a0"
+      "bytes": 18526,
+      "sha256": "0a0b99c1b0873785701e5d2d2dc470e9f5eb64e7c23396b7b0d867e5d5ca48c1"
     },
     {
       "path": "tests/review.test.js",
