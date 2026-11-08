@@ -206,7 +206,7 @@ class Parser {
     else {
       args.push(this.string().value);
       while (this.at(',')) {
-        this.take();
+        this.expect(',');
         if (args.length >= LIMITS.pickChoices) fail('LIMIT', `pick allows at most ${LIMITS.pickChoices} choices.`, this.peek());
         args.push(this.string().value);
       }

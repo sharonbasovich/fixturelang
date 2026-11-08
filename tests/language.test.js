@@ -286,3 +286,29 @@ test('every executable .fixture example compiles, runs and exports deterministic
   }
   assert.equal(examples.length, EXAMPLES.length);
 });
+
+test('pick rejects quoted comma separators at their source coordinates', () => {
+  for (const separator of ['","', '"\\u002c"']) {
+    for (const newline of ['\n', '\r', '\r\n']) {
+      const line = `  x: string = pick("😀" ${separator} "b");`;
+      const source = `fixture sample seed 0 {${newline}table things rows 1 {${newline}${line}${newline}}}`;
+      const detail = diagnostic(source, 'SYNTAX');
+      assert.equal(detail.line, 3);
+      assert.equal(detail.column, line.indexOf(separator) + 1);
+      assert.match(detail.message, /^Expected ","/);
+    }
+  }
+});
+
+test('pick preserves punctuation strings as choices with real comma separators', async () => {
+  const choices = [',', ')', ';', '}', '', '😀'];
+  const source = program(`x: string = pick(${choices.map(value => JSON.stringify(value)).join(',')});`, { rows: 20 });
+  assert.deepEqual(compile(source).tables[0].fields[0].generator.args, choices);
+  const rows = (await run(source)).tables[0].rows;
+  assert.ok(rows.every(row => choices.includes(row.x)));
+  for (const literal of ['","', '"\\u002c"', '")"', '";"', '"}"']) {
+    const value = JSON.parse(literal);
+    const data = await run(program(`x: string = pick(${literal});`, { rows: 1 }));
+    assert.equal(data.tables[0].rows[0].x, value);
+  }
+});
