@@ -1,4 +1,5 @@
-import { open } from 'node:fs/promises';
+import { open, stat } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import { run, FixtureError } from '../src/language.js';
 import { toCSV, toJSON } from '../src/export.js';
 
@@ -10,7 +11,12 @@ async function main() {
   const csv = arguments_.length === 5 && arguments_[1] === '--csv' && arguments_[3] === '--mode'
     && ['raw', 'spreadsheet'].includes(arguments_[4]);
   if (!file || !(json || csv)) throw new Error(USAGE);
-  const handle = await open(file, 'r');
+  if (!(await stat(file)).isFile()) throw new Error('Source must be a regular local file.');
+  // POSIX FIFOs can block during open, before the descriptor type is checked.
+  // The path can change after stat. O_NONBLOCK prevents waiting for a FIFO writer.
+  // It does not change regular-file reads. Windows keeps its existing flags.
+  const flags = process.platform === 'win32' ? 'r' : constants.O_RDONLY | constants.O_NONBLOCK;
+  const handle = await open(file, flags);
   let source;
   try {
     const metadata = await handle.stat();

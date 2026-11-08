@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { request } from 'node:http';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rm, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -101,4 +101,138 @@ test('CLI produces deterministic JSON and requires explicit raw/spreadsheet CSV 
   assert.match(invoke(['--json']).stderr, /valid UTF-8/u);
   await writeFile(file, ' '.repeat(65536 * 4 + 1));
   assert.match(invoke(['--json']).stderr, /read limit/u);
+});
+
+test('CLI rejects a directory without producing data', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'fixturelang-directory-'));
+  t.after(async () => {
+    assert.equal(path.dirname(root), path.resolve(tmpdir()));
+    await rm(root, { recursive: true, force: true });
+  });
+  const output = spawnSync(process.execPath, ['scripts/cli.mjs', root, '--json'], {
+    cwd: PROJECT_ROOT, encoding: 'utf8', timeout: 5000, killSignal: 'SIGKILL'
+  });
+  assert.equal(output.error, undefined);
+  assert.equal(output.signal, null);
+  assert.equal(output.status, 1);
+  assert.equal(output.stdout, '');
+  assert.equal(output.stderr, 'Source must be a regular local file.\n');
+});
+
+test('POSIX CLI rejects FIFOs without a writer, including symlink targets', {
+  skip: process.platform === 'win32' ? 'POSIX FIFO creation is unavailable on Windows.' : false
+}, async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'fixturelang-fifo-'));
+  t.after(async () => {
+    assert.equal(path.dirname(root), path.resolve(tmpdir()));
+    await rm(root, { recursive: true, force: true });
+  });
+  const fifo = path.join(root, 'source.fixture');
+  const created = spawnSync('mkfifo', [fifo], {
+    encoding: 'utf8', timeout: 5000, killSignal: 'SIGKILL'
+  });
+  assert.equal(created.error, undefined, 'POSIX tooling tests require mkfifo.');
+  assert.equal(created.status, 0, created.stderr);
+  const linked = path.join(root, 'linked.fixture');
+  await symlink(fifo, linked);
+  for (const file of [fifo, linked]) {
+    for (const args of [['--json'], ['--csv', 'rows', '--mode', 'raw'], ['--csv', 'rows', '--mode', 'spreadsheet']]) {
+      const output = spawnSync(process.execPath, ['scripts/cli.mjs', file, ...args], {
+        cwd: PROJECT_ROOT, encoding: 'utf8', timeout: 5000, killSignal: 'SIGKILL'
+      });
+      assert.equal(output.error, undefined, `${file} ${args.join(' ')} must not wait for a writer.`);
+      assert.equal(output.signal, null);
+      assert.equal(output.status, 1);
+      assert.equal(output.stdout, '');
+      assert.equal(output.stderr, 'Source must be a regular local file.\n');
+    }
+  }
+});
+
+test('POSIX CLI still reads symlinks to regular fixture files', {
+  skip: process.platform === 'win32' ? 'Windows symlink creation can require additional privileges.' : false
+}, async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'fixturelang-file-link-'));
+  t.after(async () => {
+    assert.equal(path.dirname(root), path.resolve(tmpdir()));
+    await rm(root, { recursive: true, force: true });
+  });
+  const file = path.join(root, 'source.fixture');
+  const linked = path.join(root, 'linked.fixture');
+  await writeFile(file, 'fixture tiny seed 0 { table rows rows 1 { id: id = seq(1); } }');
+  await symlink(file, linked);
+  const invoke = target => spawnSync(process.execPath, ['scripts/cli.mjs', target, '--json'], {
+    cwd: PROJECT_ROOT, encoding: 'utf8', timeout: 5000, killSignal: 'SIGKILL'
+  });
+  const direct = invoke(file);
+  const throughLink = invoke(linked);
+  for (const output of [direct, throughLink]) {
+    assert.equal(output.error, undefined);
+    assert.equal(output.status, 0, output.stderr);
+    assert.equal(output.stderr, '');
+  }
+  assert.equal(throughLink.stdout, direct.stdout);
+});
+
+test('POSIX CLI rejects a source replaced by a FIFO between path stat and open', {
+  skip: process.platform === 'win32' ? 'POSIX FIFO creation is unavailable on Windows.' : false
+}, async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'fixturelang-fifo-race-'));
+  t.after(async () => {
+    assert.equal(path.dirname(root), path.resolve(tmpdir()));
+    await rm(root, { recursive: true, force: true });
+  });
+  const file = path.join(root, 'source.fixture');
+  const saved = path.join(root, 'saved.fixture');
+  const preload = path.join(root, 'swap-before-open.mjs');
+  const source = 'fixture tiny seed 0 { table rows rows 1 { id: id = seq(1); } }';
+  await writeFile(file, source);
+  // Instrument only this subprocess and its own synthetic path. The CLI still
+  // performs the real open and descriptor check on the replacement FIFO.
+  await writeFile(preload, `
+    import fs from 'node:fs/promises';
+    import { syncBuiltinESMExports } from 'node:module';
+    import { spawnSync } from 'node:child_process';
+    const originalOpen = fs.open;
+    fs.open = async function(file, ...args) {
+      if (file === ${JSON.stringify(file)}) {
+        await fs.rename(file, ${JSON.stringify(saved)});
+        const created = spawnSync('mkfifo', [file], { encoding: 'utf8', timeout: 5000, killSignal: 'SIGKILL' });
+        if (created.error || created.status !== 0) throw new Error('Could not prepare test FIFO.');
+      }
+      return originalOpen(file, ...args);
+    };
+    syncBuiltinESMExports();
+  `);
+  const output = spawnSync(process.execPath, ['--import', preload, 'scripts/cli.mjs', file, '--json'], {
+    cwd: PROJECT_ROOT, encoding: 'utf8', timeout: 5000, killSignal: 'SIGKILL'
+  });
+  assert.equal(output.error, undefined, 'Replaced source must not wait for a FIFO writer.');
+  assert.equal(output.signal, null);
+  assert.equal(output.status, 1);
+  assert.equal(output.stdout, '');
+  assert.equal(output.stderr, 'Source must be a regular local file.\n');
+  assert.equal(await readFile(saved, 'utf8'), source);
+});
+
+test('CLI preserves empty single-column records in both CSV modes', async t => {
+  const root = await mkdtemp(path.join(tmpdir(), 'fixturelang-empty-csv-'));
+  t.after(async () => {
+    assert.equal(path.dirname(root), path.resolve(tmpdir()));
+    await rm(root, { recursive: true, force: true });
+  });
+  const file = path.join(root, 'empty.fixture');
+  await writeFile(file, 'fixture empty seed 0 { table strings rows 3 { value: string = pick(""); } table omitted rows 3 { value: string = pick("x") missing every 1; } table nulls rows 3 { value: string = pick("x") null every 1; } }');
+  for (const name of ['strings', 'omitted', 'nulls']) {
+    for (const mode of ['raw', 'spreadsheet']) {
+      const output = spawnSync(process.execPath, ['scripts/cli.mjs', file, '--csv', name, '--mode', mode], {
+        cwd: PROJECT_ROOT, encoding: 'utf8', timeout: 10000
+      });
+      assert.equal(output.status, 0, output.stderr);
+      assert.equal(output.stdout, 'value\r\n""\r\n""\r\n""\r\n');
+      if (name === 'strings') assert.equal(output.stderr, '');
+      if (name === 'omitted') assert.match(output.stderr, /3 missing and 0 null/);
+      if (name === 'nulls') assert.match(output.stderr, /0 missing and 3 null/);
+    }
+  }
 });

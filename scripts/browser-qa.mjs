@@ -10,6 +10,7 @@ import { EXAMPLES } from '../src/examples.js';
 import { run } from '../src/language.js';
 import { toJSON, toCSV } from '../src/export.js';
 import { inspectTable } from '../src/inspect.js';
+import { needsSourceProtection } from '../src/source-state.js';
 
 const require = createRequire(import.meta.url);
 const playwright = require(process.env.FIXTURELANG_PLAYWRIGHT || 'playwright-core');
@@ -48,8 +49,18 @@ async function generated(rows) {
   assert.equal(await runButton.isEnabled(), true);
   assert.equal(await jsonButton.isEnabled(), true);
 }
-async function example(id) {
+async function replaceExample(id) {
+  const needsConfirmation = needsSourceProtection(await editor.inputValue());
+  const confirmation = needsConfirmation ? page.waitForEvent('dialog', { timeout: 5000 }).then(async dialog => {
+    assert.equal(dialog.type(), 'confirm');
+    assert.match(dialog.message(), /^Replace your custom fixture source/);
+    await dialog.accept();
+  }) : null;
   await page.getByLabel('Start with').selectOption(id);
+  if (confirmation) await confirmation;
+}
+async function example(id) {
+  await replaceExample(id);
   assert.equal(await jsonButton.isEnabled(), false);
   await runButton.click();
 }
@@ -133,6 +144,23 @@ try {
     assert.equal(await saveDownload(jsonButton, 'after-csv.json'), toJSON(data));
     await page.screenshot({ path: path.join(evidence, 'csv-choice.png'), fullPage: true });
   });
+  await check('Single-column empty CSV downloads preserve row count in both modes', async () => {
+    const source = 'fixture empty seed 0 { table strings rows 3 { value: string = pick(""); } table omitted rows 3 { value: string = pick("x") missing every 1; } table nulls rows 3 { value: string = pick("x") null every 1; } }';
+    await editor.fill(source);
+    await runButton.click();
+    await generated('9');
+    await page.getByRole('tab', { name: 'CSV', exact: true }).click();
+    for (const index of ['0', '1', '2']) {
+      await page.locator('#table').selectOption(index);
+      for (const mode of ['raw', 'spreadsheet']) {
+        await page.getByLabel('CSV export mode').selectOption(mode);
+        const expected = 'value\r\n""\r\n""\r\n""\r\n';
+        assert.equal(await page.locator('#result-panel pre').textContent(), expected);
+        assert.equal(await saveDownload(csvButton, `empty-${index}-${mode}.csv`), expected);
+      }
+    }
+    assert.equal(await saveDownload(jsonButton, 'empty-csv-json.json'), toJSON(await run(source)));
+  });
   await check('Source download preserves current edited source', async () => {
     const edited = (await editor.inputValue()) + '\n# saved source';
     await editor.fill(edited);
@@ -140,9 +168,48 @@ try {
     assert.equal(saved, edited);
     assert.equal(await csvButton.isEnabled(), false);
   });
+  await check('Custom source survives canceled example replacement; download does not clear its warning', async () => {
+    const custom = 'fixture retain seed 5 { table t rows 2 { id: id = seq(1); } }\n# exact note 🪴';
+    await editor.fill(custom);
+    await runButton.click();await generated('2');
+    await editor.evaluate(node => node.setSelectionRange(8, 14));
+    const dismissed = page.waitForEvent('dialog').then(async dialog => {
+      assert.equal(dialog.type(), 'confirm');
+      assert.match(dialog.message(), /^Replace your custom fixture source/);
+      await dialog.dismiss();
+    });
+    await page.getByLabel('Start with').selectOption('related-orders');await dismissed;
+    assert.equal(await editor.inputValue(), custom);
+    assert.deepEqual(await editor.evaluate(node => [node.selectionStart, node.selectionEnd]), [8, 14]);
+    assert.equal(await page.getByLabel('Start with').inputValue(), '');
+    assert.equal(await jsonButton.isEnabled(), true);
+    assert.equal(await page.locator('#source-protection').isVisible(), true);
+    assert.equal(await saveDownload(page.getByRole('button', { name: 'Save source', exact: true })), custom);
+    assert.equal(await page.locator('#source-protection').isVisible(), true);
+    await replaceExample('related-orders');
+    assert.equal(await editor.inputValue(), EXAMPLES.find(item => item.id === 'related-orders').source);
+    assert.equal(await page.locator('#source-protection').isVisible(), false);
+  });
+  await check('Actual reload Cancel preserves custom source; Leave restores the initial example', async () => {
+    const custom = 'fixture reload seed 5 { table t rows 2 { id: id = seq(1); } }';
+    await editor.fill(custom);await editor.press('End');
+    const cancelDialog = page.waitForEvent('dialog');
+    const canceledReload = page.reload().then(() => null, error => error);
+    const cancel = await cancelDialog;assert.equal(cancel.type(), 'beforeunload');await cancel.dismiss();
+    const canceledError = await canceledReload;
+    if (canceledError) assert.match(canceledError.message, /ERR_ABORTED|aborted/i);
+    assert.equal(await editor.inputValue(), custom);
+    assert.equal(await page.locator('#source-protection').isVisible(), true);
+    const leaveDialog = page.waitForEvent('dialog');
+    const acceptedReload = page.reload();
+    const leave = await leaveDialog;assert.equal(leave.type(), 'beforeunload');await leave.accept();
+    await acceptedReload;await generated('30');
+    assert.equal(await editor.inputValue(), EXAMPLES[0].source);
+    assert.equal(await page.locator('#source-protection').isVisible(), false);
+  });
   await check('Reduced motion suppresses running pulse; cancel prevents late results', async () => {
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.getByLabel('Start with').selectOption('bounded-workload');
+    await replaceExample('bounded-workload');
     await runButton.click();
     assert.equal(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches), true);
     assert.equal(await page.locator('#status-dot').evaluate(node => getComputedStyle(node).animationName), 'none');
@@ -172,7 +239,7 @@ try {
     assert.equal(await page.getByRole('button', { name: 'Cancel', exact: true }).isEnabled(), false);
     await editor.press('Control+Enter');
     await generated('1');
-    await page.getByLabel('Start with').selectOption('bounded-workload');
+    await replaceExample('bounded-workload');
     await runButton.click();
     await page.goto(origin + '/docs/language-reference.md');
     await page.goBack();
@@ -198,6 +265,7 @@ try {
   });
   await check('Keyboard-only skip link and visible focus; documentation routes', async () => {
     await page.setViewportSize({ width: 1440, height: 1050 });
+    await replaceExample('importer-edges');
     await page.goto(origin);
     await generated('30');
     await page.keyboard.press('Tab');
@@ -274,7 +342,7 @@ try {
     await runButton.click();
     await page.locator('#diagnostic').waitFor({ state: 'visible' });
     assert.equal(await inspectButton('all').isEnabled(), false);
-    await page.getByLabel('Start with').selectOption('bounded-workload');
+    await replaceExample('bounded-workload');
     await runButton.click();
     assert.equal(await inspectButton('all').isEnabled(), false);
     await page.locator('#cancel').click();

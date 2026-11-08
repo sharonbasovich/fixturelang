@@ -2,6 +2,14 @@
 
 FixtureLang includes executable tests for its language, exports, local tooling and browser interactions. The checks below describe a verification snapshot from 2026-10-27, not a security certification or a promise of compatibility with every browser or spreadsheet application.
 
+## 0.1.2 candidate: CSV and CLI corrections
+
+On November 6, 2026, the integrated private candidate passed 51 Node tests on Linux with Node.js 24.22.1, syntax/architecture checks, static build and the public-file allowlist audit. This combines the empty-record CSV correction and the separate regular-file CLI correction, preserving every test from both candidates. A new exact-byte regression failed on 0.1.1 and passed after the narrow CSV correction. Six actual CLI outputs, covering empty strings, missing keys and nulls in both modes, were independently parsed by Python's standard CSV reader, including with blank-line skipping. Each retained all three one-field records. Multi-column serialization, generation and JSON were unchanged.
+
+The CLI rejects FIFO inputs without waiting for a writer on POSIX systems, including a tested path-replacement race. Regular-file symlinks remain supported. This is a local reliability improvement, not a security boundary or a universal filesystem timeout. Windows retains its existing open mode; the three POSIX-only test groups skip there. Windows, macOS and Node.js 20/22 behavior have not been validated for this candidate.
+
+The browser harness now includes an additional preview/download regression for these cases, but that new group and the full browser suite have not yet run on this candidate. Native download, visual, Windows and hosted CI acceptance remain pending. The browser results below are historical 0.1.1 evidence, not validation of 0.1.2 or a published-release claim.
+
 ## Recorded results
 
 | Command or check | Result |
@@ -81,3 +89,12 @@ A single desktop Chromium sample scanned the full 20,000-row/200,000-cell fixtur
 
 The recorded browser run covers Chromium, not a complete cross-browser matrix. Automated focus and layout checks do not replace a full assistive-technology audit. CSV protection was checked as an explicit string transformation; the output was not executed in every spreadsheet application. The suite does not prove parser correctness, conduct a multiday fuzz campaign, or establish a human security audit. See [credits](credits.md) for development provenance and [limitations](limitations.md) for the supported language scope.
 
+
+
+## Private cumulative source-preservation candidate — November 6, 2026
+
+Adds protection for nonempty custom source: example replacement requires explicit confirmation, and a conditional beforeunload listener requests a best-effort exit warning. Exact built-in source or an empty editor removes the listener. Running, canceling, generating and requesting source/data downloads do not establish retention. No storage or network behavior was added.
+
+The separate source-state unit tests cover all built-ins, invalid/comment-only/Unicode/whitespace work, repeated edits and exact reverts. An isolated jsdom 30.1.1 harness executes the actual app modules with simulated workers, dialog choices and downloads; it reproduced silent replacement in the prior integrated candidate and checks canceled/confirmed replacement, active-worker preservation, valid-result preservation, selection, download-warning retention, repeated transitions and stale worker results. Those simulations do not establish native dialog or download behavior.
+
+The browser suite includes new example-replacement and actual reload Cancel/Leave cases, and existing intentional example replacements explicitly accept only the expected confirmation. These new browser cases have not run. Native/browser/visual/mobile/accessibility/download acceptance, Windows/macOS, Node 20/22 and hosted CI remain pending. The existing CSV/FIFO fixes and their prior evidence are preserved. Do not publish on the basis of these source checks alone.

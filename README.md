@@ -12,7 +12,7 @@ Requires Node.js 20 or newer. No dependency installation is needed.
 npm start
 ```
 
-Open the loopback URL printed by the server. Keep that process running while using the playground. Source is processed in a Web Worker; Cancel terminates the active worker. Ctrl+Enter or Cmd+Enter runs the editor. Each run starts fresh from the declared seed. Downloads are local browser downloads.
+Open the loopback URL printed by the server. Keep that process running while using the playground. Source is processed in a Web Worker; Cancel terminates the active worker. Ctrl+Enter or Cmd+Enter runs the editor. Each run starts fresh from the declared seed. Downloads are local browser downloads. Custom source exists only in the current tab: use **Save source** and verify the file before leaving. Replacing custom source with an example asks before discarding it. Custom source also requests a best-effort browser exit warning, including after downloads because the app cannot confirm that a file was saved. Exact built-in examples and an empty editor need no warning. Mobile closures, crashes and some navigation may skip the warning; it is not autosave.
 
 ```sh
 npm test
@@ -30,7 +30,7 @@ The opening **Importer edge cases** example generates two related tables. In **I
 
 Counts describe actual generated cells in the selected table; **All records** counts rows. Repeated references may be valid: this view observes values and does not validate an importer's uniqueness policy. Filters scan the full bounded table, so a case after row 100 can still be found. At most 100 matching records are rendered, with original row numbers. Arrow keys switch inspection choices; source edits disable the previous result's inspector until a successful run.
 
-Inspection never changes a fixture. The filter only changes the table view. JSON and CSV previews retain their usual cap of 100 rows per table; downloads include the complete dataset regardless of the filter. Run the same source again to reproduce the same exported bytes. The language semantics remain version 0.1; playground release 0.1.1 adds inspection only.
+Inspection never changes a fixture. The filter only changes the table view. JSON and CSV previews retain their usual cap of 100 rows per table; downloads include the complete dataset regardless of the filter. Run the same source and application version again to reproduce the same exported bytes. The language semantics remain version 0.1; playground 0.1.1 added inspection. Version 0.1.2 corrects CSV serialization of single-column empty records, without changing generated data or JSON.
 
 To generate output without the playground, use the local CLI. CSV requires both a selected table and an explicit export mode:
 
@@ -40,7 +40,7 @@ npm run fixture -- examples/csv-boundaries.fixture --csv payloads --mode raw
 npm run fixture -- examples/csv-boundaries.fixture --csv payloads --mode spreadsheet
 ```
 
-The CLI writes data to standard output and diagnostics to standard error. To pipe data without npm's script banner, invoke `node scripts/cli.mjs` with the same arguments. Ctrl+C requests cancellation during generation; cancelled generation produces no dataset output.
+The CLI accepts regular local UTF-8 files, not pipe or device inputs. On POSIX systems, a FIFO input is rejected without waiting for a writer. It writes data to standard output and diagnostics to standard error. To pipe data without npm's script banner, invoke `node scripts/cli.mjs` with the same arguments. Ctrl+C requests cancellation during generation; cancelled generation produces no dataset output.
 
 ## A complete fixture
 
@@ -69,6 +69,8 @@ The playground includes [importer edges](examples/importer-edges.fixture), [rela
 JSON retains omitted properties, explicit nulls and empty strings. CSV cannot distinguish those three states: all become empty cells. Choose JSON if your importer needs that distinction.
 
 CSV export requires an explicit choice. **Raw test payload** preserves strings exactly, including formula-like text. **Spreadsheet-safe** prefixes an apostrophe to strings that could be interpreted as formulas, plus strings beginning with tab, CR or LF. This intentionally changes those cells and reports the count; it is a spreadsheet-use convenience, not a byte-identical test payload or a universal spreadsheet security guarantee. Negative numeric values remain numeric. Quoting still follows CSV syntax in both modes.
+
+A single-column empty record is written as `""` rather than a blank line, so CSV readers retain one empty field and do not skip the record as a blank line. This applies to empty strings, missing keys and nulls in both modes. Their distinction is still lost in CSV; use JSON to retain it.
 
 Fixed budgets cap source, tokens, rows, tables, fields, generated cells and text. The UI previews at most 100 rows per table; the download contains the entire completed dataset. Parsing failures include a line and column. No loops, imports, arbitrary expressions, eval, file access or source-selected network requests exist in the language.
 
